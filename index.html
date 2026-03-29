@@ -1,0 +1,966 @@
+<!--
+=======================================================
+  AGRI-PDB EVENTS CALENDAR
+  Hosted on: https://agripdbplatform.github.io/events-calendar/
+
+  TO EMBED IN WORDPRESS:
+  Add a "Custom HTML" block and paste this:
+
+  <iframe
+    src="https://agripdbplatform.github.io/events-calendar/"
+    width="100%"
+    height="720"
+    frameborder="0"
+    style="border:none; border-radius:12px;">
+  </iframe>
+
+  TO UPDATE EVENTS: edit the EVENTS array in the <script> block below.
+=======================================================
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agri-PDB Events Calendar</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --green-dark:   #1D5C3A;
+    --green-mid:    #2D7A52;
+    --green-light:  #4A9E72;
+    --teal:         #1B7A8A;
+    --teal-light:   #3AABBF;
+    --navy:         #1A3552;
+    --sand:         #F5F2EC;
+    --white:        #FFFFFF;
+    --text-dark:    #1A2B1E;
+    --text-mid:     #4A5B50;
+    --text-light:   #8A9E93;
+    --border:       #D8E8DD;
+    --tag-webinar:  #E8F4EE;
+    --tag-color:    #2D7A52;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--sand);
+    color: var(--text-dark);
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    background: linear-gradient(135deg, var(--green-dark) 0%, var(--teal) 100%);
+    padding: 32px 40px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+  .header::before {
+    content: '';
+    position: absolute;
+    top: -60px; right: -60px;
+    width: 220px; height: 220px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: -40px; left: 30%;
+    width: 140px; height: 140px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.04);
+  }
+  .header-inner {
+    max-width: 860px;
+    margin: 0 auto;
+    position: relative;
+    z-index: 1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+  .header-left {}
+  .header-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 6px;
+  }
+  .header-title {
+    font-family: 'Lora', serif;
+    font-size: 26px;
+    font-weight: 700;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .header-subtitle {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    margin-top: 6px;
+  }
+
+  /* download all ICS */
+  .btn-ics-all {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 10px 18px;
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 8px;
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background 0.2s;
+  }
+  .btn-ics-all:hover { background: rgba(255,255,255,0.25); }
+  .btn-ics-all svg { flex-shrink: 0; }
+
+  /* ── CONTROLS ── */
+  .controls {
+    max-width: 860px;
+    margin: 24px auto 0;
+    padding: 0 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .view-toggle {
+    display: flex;
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .view-btn {
+    padding: 8px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-mid);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.15s;
+  }
+  .view-btn.active {
+    background: var(--green-dark);
+    color: #fff;
+  }
+  .event-count {
+    font-size: 13px;
+    color: var(--text-light);
+  }
+  .event-count strong { color: var(--text-dark); }
+
+  /* ── MAIN ── */
+  .main {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 24px 40px 60px;
+  }
+
+  /* ════════════════════════════
+     LIST VIEW
+  ════════════════════════════ */
+  .list-view { display: block; }
+  .month-section { margin-bottom: 36px; }
+  .month-label {
+    font-family: 'Lora', serif;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: var(--green-mid);
+    padding-bottom: 10px;
+    border-bottom: 2px solid var(--border);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .month-label::after {
+    content: '';
+    flex: 1;
+    height: 2px;
+    background: var(--border);
+    display: none;
+  }
+
+  .event-card {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 20px 22px;
+    margin-bottom: 12px;
+    display: grid;
+    grid-template-columns: 64px 1fr auto;
+    gap: 18px;
+    align-items: start;
+    transition: box-shadow 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+  .event-card::before {
+    content: '';
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 4px;
+    background: linear-gradient(to bottom, var(--green-mid), var(--teal));
+    border-radius: 4px 0 0 4px;
+  }
+  .event-card:hover {
+    box-shadow: 0 6px 24px rgba(29,92,58,0.1);
+    transform: translateY(-1px);
+  }
+
+  .event-date-badge {
+    text-align: center;
+    background: var(--tag-webinar);
+    border-radius: 10px;
+    padding: 10px 4px;
+    flex-shrink: 0;
+  }
+  .badge-day {
+    font-family: 'Lora', serif;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--green-dark);
+    line-height: 1;
+  }
+  .badge-mon {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--green-mid);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-top: 2px;
+  }
+  .badge-tbd {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 6px 0;
+  }
+
+  .event-body {}
+  .event-tag-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+  }
+  .event-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--tag-color);
+    background: var(--tag-webinar);
+    padding: 3px 8px;
+    border-radius: 4px;
+  }
+  .event-lang {
+    font-size: 11px;
+    color: var(--text-light);
+    font-weight: 500;
+  }
+  .li-link {
+    color: var(--teal);
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    transition: opacity 0.15s;
+  }
+  .li-link:hover { opacity: 0.75; }
+  .event-title {
+    font-family: 'Lora', serif;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-dark);
+    line-height: 1.4;
+    margin-bottom: 6px;
+  }
+  .event-meta {
+    font-size: 12px;
+    color: var(--text-light);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .event-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .event-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+  .btn-register {
+    padding: 8px 14px;
+    background: var(--green-dark);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .btn-register:hover { background: var(--green-mid); }
+  .btn-register.disabled {
+    background: var(--border);
+    color: var(--text-light);
+    cursor: default;
+  }
+  .btn-ics {
+    padding: 7px 14px;
+    background: transparent;
+    color: var(--teal);
+    border: 1px solid var(--teal-light);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .btn-ics:hover {
+    background: var(--teal);
+    color: #fff;
+    border-color: var(--teal);
+  }
+  .btn-ics.disabled {
+    color: var(--text-light);
+    border-color: var(--border);
+    cursor: default;
+  }
+
+  /* ════════════════════════════
+     MONTH GRID VIEW
+  ════════════════════════════ */
+  .grid-view { display: none; }
+  .calendar-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+  .cal-nav-btn {
+    width: 36px; height: 36px;
+    border-radius: 8px;
+    background: var(--white);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.15s;
+    color: var(--text-mid);
+  }
+  .cal-nav-btn:hover { background: var(--green-dark); color: #fff; border-color: var(--green-dark); }
+  .cal-month-title {
+    font-family: 'Lora', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text-dark);
+  }
+
+  .cal-grid {
+    background: var(--white);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+  }
+  .cal-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    background: var(--green-dark);
+  }
+  .cal-wd {
+    text-align: center;
+    padding: 10px 4px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.8);
+  }
+  .cal-days {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    border-top: 1px solid var(--border);
+  }
+  .cal-day {
+    min-height: 90px;
+    padding: 8px;
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    position: relative;
+  }
+  .cal-day:nth-child(7n) { border-right: none; }
+  .cal-day.other-month .day-num { color: var(--text-light); opacity: 0.4; }
+  .cal-day.today { background: #f0faf4; }
+  .cal-day.today .day-num {
+    background: var(--green-dark);
+    color: #fff;
+    border-radius: 50%;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .day-num {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-mid);
+    margin-bottom: 4px;
+    width: 24px; height: 24px;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .cal-event-pill {
+    background: linear-gradient(135deg, var(--green-mid), var(--teal));
+    color: #fff;
+    border-radius: 5px;
+    padding: 3px 6px;
+    font-size: 10px;
+    font-weight: 500;
+    line-height: 1.3;
+    margin-bottom: 3px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+  .cal-event-pill.tbd {
+    background: linear-gradient(135deg, #8A9E93, #aaa);
+  }
+  .cal-event-pill:hover { opacity: 0.85; }
+
+  /* event detail popup */
+  .event-popup {
+    position: fixed;
+    inset: 0;
+    background: rgba(26,37,30,0.5);
+    z-index: 100;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    backdrop-filter: blur(3px);
+  }
+  .event-popup.open { display: flex; }
+  .popup-card {
+    background: #fff;
+    border-radius: 18px;
+    padding: 32px;
+    max-width: 500px;
+    width: 100%;
+    position: relative;
+    box-shadow: 0 20px 60px rgba(29,92,58,0.25);
+  }
+  .popup-close {
+    position: absolute;
+    top: 16px; right: 16px;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: var(--sand);
+    border: none;
+    cursor: pointer;
+    font-size: 18px;
+    color: var(--text-mid);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .popup-tag {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--tag-color);
+    background: var(--tag-webinar);
+    padding: 4px 10px;
+    border-radius: 4px;
+    display: inline-block;
+    margin-bottom: 12px;
+  }
+  .popup-title {
+    font-family: 'Lora', serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.4;
+    margin-bottom: 14px;
+  }
+  .popup-meta {
+    font-size: 13px;
+    color: var(--text-mid);
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .popup-meta span { display: flex; align-items: center; gap: 8px; }
+  .popup-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .popup-btn-register {
+    flex: 1;
+    padding: 11px 16px;
+    background: var(--green-dark);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s;
+  }
+  .popup-btn-register:hover { background: var(--green-mid); }
+  .popup-btn-ics {
+    flex: 1;
+    padding: 11px 16px;
+    background: transparent;
+    color: var(--teal);
+    border: 1.5px solid var(--teal-light);
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.2s;
+  }
+  .popup-btn-ics:hover { background: var(--teal); color: #fff; }
+
+  /* ── RESPONSIVE ── */
+  @media (max-width: 600px) {
+    .header { padding: 24px 20px; }
+    .controls { padding: 0 20px; }
+    .main { padding: 20px 20px 48px; }
+    .event-card {
+      grid-template-columns: 56px 1fr;
+      grid-template-rows: auto auto;
+    }
+    .event-actions {
+      grid-column: 1 / -1;
+      flex-direction: row;
+    }
+    .header-inner { flex-direction: column; align-items: flex-start; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ══ -->
+<div class="header">
+  <div class="header-inner">
+    <div class="header-left">
+      <div class="header-label">Agri-PDB Platform</div>
+      <div class="header-title">Upcoming Events &amp; Initiatives</div>
+      <div class="header-subtitle">Webinars, working groups and learning sessions</div>
+    </div>
+    <button class="btn-ics-all" onclick="downloadAllICS()">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path d="M8 7H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3m-1-4H9m6 0a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H9a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1m6 0H9"/>
+      </svg>
+      Add all to calendar
+    </button>
+  </div>
+</div>
+
+<!-- ══ CONTROLS ══ -->
+<div class="controls">
+  <div class="view-toggle">
+    <button class="view-btn active" id="btn-list" onclick="switchView('list')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      List
+    </button>
+    <button class="view-btn" id="btn-grid" onclick="switchView('grid')">
+      <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      Month
+    </button>
+  </div>
+  <div class="event-count" id="event-count"></div>
+</div>
+
+<!-- ══ MAIN ══ -->
+<div class="main">
+
+  <!-- LIST VIEW -->
+  <div class="list-view" id="list-view"></div>
+
+  <!-- GRID VIEW -->
+  <div class="grid-view" id="grid-view">
+    <div class="calendar-nav">
+      <button class="cal-nav-btn" onclick="changeMonth(-1)">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <div class="cal-month-title" id="cal-title"></div>
+      <button class="cal-nav-btn" onclick="changeMonth(1)">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <div class="cal-grid" id="cal-grid"></div>
+  </div>
+
+</div>
+
+<!-- EVENT POPUP -->
+<div class="event-popup" id="event-popup" onclick="closePopup(event)">
+  <div class="popup-card">
+    <button class="popup-close" onclick="document.getElementById('event-popup').classList.remove('open')">✕</button>
+    <div class="popup-tag" id="p-tag"></div>
+    <div class="popup-title" id="p-title"></div>
+    <div class="popup-meta" id="p-meta"></div>
+    <div class="popup-actions" id="p-actions"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  ⚡ EDIT YOUR EVENTS HERE
+//  date: "YYYY-MM-DD" or null if TBD
+//  time: "HH:MM" in CEST (or null)
+//  duration: in minutes
+//  language: shown as a small badge on the card
+// ══════════════════════════════════════════════
+const EVENTS = [
+  {
+    id: 1,
+    title: "KPI Webinar – Session 2 : Tendances actuelles et défis émergents liés au développement des indicateurs clés de performance",
+    tag: "Webinar",
+    date: "2026-03-31",
+    time: "16:00",
+    duration: 60,
+    language: "🇫🇷 Français",
+    location: "Online – Zoom",
+    registerUrl: "https://ifad.zoom.us/webinar/register/WN_GyIcVNlMR_eAWsQDvW3jWw",
+    linkedinUrl: "https://fr.linkedin.com/posts/agri-pdb-platform_ne-manquez-pas-la-deuxi%C3%A8me-session-de-activity-7440716960021213185-dlMY"
+  },
+  {
+    id: 2,
+    title: "Webinar: Mainstreaming Nutrition in Public Development Bank Investments – Entry Points and the NutrInvest Tool",
+    tag: "Webinar",
+    date: "2026-04-08",
+    time: "16:00",
+    duration: 60,
+    language: "🇬🇧 English",
+    location: "Online – Zoom",
+    registerUrl: "https://ifad.zoom.us/webinar/register/WN_2BXn8nOwQIiJTzLP08CM9g",
+    linkedinUrl: "https://www.linkedin.com/posts/agri-pdb-platform_the-agri-pdb-platform-promotes-a-growing-activity-7442968272435576833-4lJh"
+  },
+  {
+    id: 3,
+    title: "Biodiversity & Finance Webinar",
+    tag: "Webinar",
+    date: null,               // TBD — add date when confirmed
+    time: null,
+    duration: 60,
+    language: null,
+    location: "Online – Zoom",
+    registerUrl: null,
+    linkedinUrl: null
+  },
+  {
+    id: 4,
+    title: "Carbon Markets Webinar: High Integrity Carbon Markets & Agriculture Finance",
+    tag: "Webinar",
+    date: null,               // TBD — add date when confirmed
+    time: null,
+    duration: 60,
+    language: null,
+    location: "Online – Zoom",
+    registerUrl: null,
+    linkedinUrl: null
+  }
+];
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const DAYS   = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+
+function parseDate(d) { return d ? new Date(d + "T12:00:00") : null; }
+
+function formatDateLong(ev) {
+  if (!ev.date) return "Date to be confirmed";
+  const d = parseDate(ev.date);
+  return `${DAYS[d.getDay()]}, ${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}${ev.time ? ' · ' + ev.time + ' CEST' : ''}`;
+}
+
+// ══════════════════════════════════════════════
+//  ICS GENERATION
+// ══════════════════════════════════════════════
+function toICSDate(dateStr, timeStr) {
+  const d = new Date(dateStr + 'T' + (timeStr || '10:00') + ':00');
+  // Convert CEST (UTC+2) to UTC
+  const utc = new Date(d.getTime() - 2 * 60 * 60 * 1000);
+  return utc.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+}
+
+function makeICS(events) {
+  const lines = [
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Agri-PDB Platform//Events Calendar//EN',
+    'CALSCALE:GREGORIAN',
+    'METHOD:PUBLISH',
+    'X-WR-CALNAME:Agri-PDB Events',
+    'X-WR-TIMEZONE:Europe/Paris'
+  ];
+  events.filter(e => e.date).forEach(e => {
+    const start = toICSDate(e.date, e.time);
+    const endD = new Date(e.date + 'T' + (e.time || '10:00') + ':00');
+    endD.setMinutes(endD.getMinutes() + e.duration);
+    const endStr = endD.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+    const uid = `agripdb-${e.id}-${e.date}@agri-pdb.org`;
+    lines.push(
+      'BEGIN:VEVENT',
+      `UID:${uid}`,
+      `DTSTART:${start}`,
+      `DTEND:${endStr}`,
+      `SUMMARY:${e.title.replace(/,/g,'\\,')}`,
+      `LOCATION:${e.location}`,
+      e.registerUrl && e.registerUrl !== '#' ? `URL:${e.registerUrl}` : '',
+      'ORGANIZER;CN=Agri-PDB Platform:mailto:info@agri-pdb.org',
+      'END:VEVENT'
+    );
+  });
+  lines.push('END:VCALENDAR');
+  return lines.filter(l => l !== '').join('\r\n');
+}
+
+function downloadICS(events, filename) {
+  const blob = new Blob([makeICS(events)], { type: 'text/calendar;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = filename;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function downloadAllICS() { downloadICS(EVENTS, 'agri-pdb-events.ics'); }
+function downloadOneICS(id) {
+  const ev = EVENTS.find(e => e.id === id);
+  if (ev && ev.date) downloadICS([ev], `agri-pdb-event-${id}.ics`);
+}
+
+// ══════════════════════════════════════════════
+//  LIST VIEW
+// ══════════════════════════════════════════════
+function renderList() {
+  const container = document.getElementById('list-view');
+  container.innerHTML = '';
+  const byMonth = {};
+  EVENTS.forEach(ev => {
+    const key = ev.date ? ev.date.slice(0,7) : 'tbd';
+    if (!byMonth[key]) byMonth[key] = [];
+    byMonth[key].push(ev);
+  });
+
+  const keys = Object.keys(byMonth).sort((a,b) => {
+    if (a === 'tbd') return 1; if (b === 'tbd') return -1;
+    return a.localeCompare(b);
+  });
+
+  keys.forEach(key => {
+    const sec = document.createElement('div');
+    sec.className = 'month-section';
+    const d = key !== 'tbd' ? new Date(key + '-01') : null;
+    const label = d ? `${MONTHS[d.getMonth()]} ${d.getFullYear()}` : 'Date to be confirmed';
+    sec.innerHTML = `<div class="month-label">${label}</div>`;
+    byMonth[key].forEach(ev => sec.appendChild(makeCard(ev)));
+    container.appendChild(sec);
+  });
+
+  const confirmed = EVENTS.filter(e => e.date).length;
+  document.getElementById('event-count').innerHTML = `<strong>${EVENTS.length}</strong> upcoming events`;
+}
+
+function makeCard(ev) {
+  const card = document.createElement('div');
+  card.className = 'event-card';
+  const d = ev.date ? parseDate(ev.date) : null;
+  const badgeHtml = d
+    ? `<div class="event-date-badge"><div class="badge-day">${d.getDate()}</div><div class="badge-mon">${MONTHS[d.getMonth()].slice(0,3)}</div></div>`
+    : `<div class="event-date-badge"><div class="badge-tbd">TBD</div></div>`;
+
+  const hasDl = ev.date !== null;
+  const hasReg = ev.registerUrl && ev.registerUrl !== '#';
+
+  card.innerHTML = `
+    ${badgeHtml}
+    <div class="event-body">
+      <div class="event-tag-row">
+        <div class="event-tag">${ev.tag}</div>
+        ${ev.language ? `<div class="event-lang">${ev.language}</div>` : ''}
+      </div>
+      <div class="event-title">${ev.title}</div>
+      <div class="event-meta">
+        <span>
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          ${ev.time ? ev.time + ' CEST' : 'Time TBC'} · ${ev.duration} min
+        </span>
+        <span>
+          <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+          ${ev.location}
+        </span>
+        ${ev.linkedinUrl ? `<span><a class="li-link" href="${ev.linkedinUrl}" target="_blank">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+          LinkedIn post</a></span>` : ''}
+      </div>
+    </div>
+    <div class="event-actions">
+      ${hasReg
+        ? `<a class="btn-register" href="${ev.registerUrl}" target="_blank">Register</a>`
+        : `<span class="btn-register disabled">Coming soon</span>`}
+      <button class="btn-ics ${hasDl ? '' : 'disabled'}" ${hasDl ? `onclick="downloadOneICS(${ev.id})"` : ''}>📅 Add to cal</button>
+    </div>
+  `;
+  return card;
+}
+
+// ══════════════════════════════════════════════
+//  MONTH GRID VIEW
+// ══════════════════════════════════════════════
+let currentYear, currentMonth;
+
+function initGrid() {
+  const today = new Date();
+  currentYear = today.getFullYear();
+  currentMonth = today.getMonth();
+  renderGrid();
+}
+
+function changeMonth(delta) {
+  currentMonth += delta;
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  renderGrid();
+}
+
+function renderGrid() {
+  document.getElementById('cal-title').textContent = `${MONTHS[currentMonth]} ${currentYear}`;
+  const grid = document.getElementById('cal-grid');
+  const today = new Date();
+  const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+  const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+  const daysInPrev = new Date(currentYear, currentMonth, 0).getDate();
+
+  // events map
+  const evMap = {};
+  EVENTS.filter(e => e.date).forEach(ev => {
+    const d = parseDate(ev.date);
+    if (d.getFullYear() === currentYear && d.getMonth() === currentMonth) {
+      const k = d.getDate();
+      if (!evMap[k]) evMap[k] = [];
+      evMap[k].push(ev);
+    }
+  });
+
+  let html = `<div class="cal-weekdays">${DAYS.map(d=>`<div class="cal-wd">${d}</div>`).join('')}</div><div class="cal-days">`;
+
+  // prev month days
+  for (let i = firstDay - 1; i >= 0; i--) {
+    html += `<div class="cal-day other-month"><div class="day-num">${daysInPrev - i}</div></div>`;
+  }
+  // current month
+  for (let d = 1; d <= daysInMonth; d++) {
+    const isToday = today.getDate() === d && today.getMonth() === currentMonth && today.getFullYear() === currentYear;
+    const evs = evMap[d] || [];
+    html += `<div class="cal-day ${isToday ? 'today' : ''}">
+      <div class="day-num">${d}</div>
+      ${evs.map(ev => `<div class="cal-event-pill" onclick="openPopup(${ev.id})" title="${ev.title}">${ev.title.substring(0,28)}…</div>`).join('')}
+    </div>`;
+  }
+  // next month fill
+  const total = firstDay + daysInMonth;
+  const remaining = total % 7 === 0 ? 0 : 7 - (total % 7);
+  for (let d = 1; d <= remaining; d++) {
+    html += `<div class="cal-day other-month"><div class="day-num">${d}</div></div>`;
+  }
+
+  html += '</div>';
+  grid.innerHTML = html;
+}
+
+// ══════════════════════════════════════════════
+//  POPUP
+// ══════════════════════════════════════════════
+function openPopup(id) {
+  const ev = EVENTS.find(e => e.id === id);
+  if (!ev) return;
+  document.getElementById('p-tag').textContent = ev.tag;
+  document.getElementById('p-title').textContent = ev.title;
+  const hasDl = ev.date !== null;
+  const hasReg = ev.registerUrl && ev.registerUrl !== '#';
+  document.getElementById('p-meta').innerHTML = `
+    <span>📅 ${formatDateLong(ev)}</span>
+    <span>📍 ${ev.location}</span>
+    ${ev.language ? `<span>🗣 ${ev.language}</span>` : ''}
+    ${ev.linkedinUrl ? `<span><a href="${ev.linkedinUrl}" target="_blank" style="color:var(--teal);text-decoration:none;display:flex;align-items:center;gap:5px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+      View LinkedIn announcement</a></span>` : ''}
+  `;
+  document.getElementById('p-actions').innerHTML = `
+    ${hasReg
+      ? `<a class="popup-btn-register" href="${ev.registerUrl}" target="_blank">Register now</a>`
+      : `<span class="popup-btn-register" style="background:var(--border);color:var(--text-light);cursor:default">Registration coming soon</span>`}
+    <button class="popup-btn-ics" ${hasDl ? `onclick="downloadOneICS(${id})"` : 'disabled style="opacity:.5;cursor:default"'}>📅 Add to calendar</button>
+  `;
+  document.getElementById('event-popup').classList.add('open');
+}
+
+function closePopup(e) {
+  if (e.target === document.getElementById('event-popup')) {
+    document.getElementById('event-popup').classList.remove('open');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  VIEW SWITCHER
+// ══════════════════════════════════════════════
+function switchView(view) {
+  document.getElementById('list-view').style.display = view === 'list' ? 'block' : 'none';
+  document.getElementById('grid-view').style.display = view === 'grid' ? 'block' : 'none';
+  document.getElementById('btn-list').classList.toggle('active', view === 'list');
+  document.getElementById('btn-grid').classList.toggle('active', view === 'grid');
+  if (view === 'grid') renderGrid();
+}
+
+// ── INIT ──
+renderList();
+initGrid();
+switchView('list');
+</script>
+</body>
+</html>
