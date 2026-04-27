@@ -279,6 +279,10 @@
     padding: 3px 8px;
     border-radius: 4px;
   }
+  .event-tag.learning {
+    color: var(--teal);
+    background: #e0f4f7;
+  }
   .event-lang {
     font-size: 11px;
     color: var(--text-light);
@@ -656,35 +660,23 @@
 // ══════════════════════════════════════════════
 const EVENTS = [
   {
-    id: 3,
-    title: "Restoring Degraded Lands at Scale: The Brazilian ABC Model",
-    tag: "Webinar",
-    date: "2026-04-10",
-    time: "15:00",
-    duration: 60,
-    language: "🇬🇧 English",
-    location: "Online – Zoom",
-    registerUrl: "https://ifad.zoom.us/webinar/register/WN_ePzXc4R8SW2OP9OZWSkv4g",
-    linkedinUrl: null
-  },
-  {
-    id: 4,
-    title: "Financing Nature-Positive Agriculture: What Public Development Banks Can Do – Session 2 | Lessons from APR",
-    tag: "Webinar",
-    date: "2026-04-16",
-    time: "09:00",
-    duration: 60,
-    language: "🇬🇧 English",
-    location: "Online – Zoom",
-    registerUrl: "https://ifad.zoom.us/webinar/register/WN_zaYRg8eETHWk-b6m0due6w",
-    linkedinUrl: null
-  },
-  {
     id: 5,
-    title: "KPI Webinar – Session 3: Impact KPI Trends and Emerging Challenges",
+    title: "KPI Webinar – Session 3: Impact Key Performance Indicators – Trends and Emerging Challenges",
+    tag: "Webinar",
+    date: "2026-04-29",
+    time: "17:00",
+    duration: 60,
+    language: "🇬🇧 English",
+    location: "Online – Zoom",
+    registerUrl: "https://ifad.zoom.us/webinar/register/WN_kKKo2fAjQNysNCyp89n7NQ",
+    linkedinUrl: null
+  },
+  {
+    id: 6,
+    title: "Carbon Markets Webinar – Session 2",
     tag: "Webinar",
     date: null,               // TBD — add date when confirmed
-    time: "17:00",
+    time: null,
     duration: 60,
     language: null,
     location: "Online – Zoom",
@@ -692,9 +684,9 @@ const EVENTS = [
     linkedinUrl: null
   },
   {
-    id: 6,
-    title: "Carbon Markets Webinar: High Integrity Carbon Markets & Agriculture Finance",
-    tag: "Webinar",
+    id: 7,
+    title: "Learning Event: Insurance for Public Development Banks (PDBs)",
+    tag: "Learning Event",
     date: null,               // TBD — add date when confirmed
     time: null,
     duration: 60,
@@ -821,7 +813,7 @@ function makeCard(ev) {
     ${badgeHtml}
     <div class="event-body">
       <div class="event-tag-row">
-        <div class="event-tag">${ev.tag}</div>
+        <div class="event-tag ${ev.tag === 'Learning Event' ? 'learning' : ''}">${ev.tag}</div>
         ${ev.language ? `<div class="event-lang">${ev.language}</div>` : ''}
       </div>
       <div class="event-title">${ev.title}</div>
