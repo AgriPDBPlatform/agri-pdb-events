@@ -661,15 +661,15 @@
 const EVENTS = [
 
   {
-    id: 8,
-    title: "Stabilising Food Systems in a Poly-Crisis: The Countercyclical Role of Public Development Banks in Response to the Persian Gulf Crisis",
+    id: 11,
+    title: "Gestion des données pour les indicateurs d'impact : des systèmes manuels aux technologies numériques et avancées",
     tag: "Webinar",
-    date: "2026-05-13",
-    time: "15:00",
+    date: "2026-06-12",
+    time: "16:00",
     duration: 60,
-    language: "🇬🇧 English",
+    language: "🇫🇷 Français",
     location: "Online – Zoom",
-    registerUrl: "https://ifad.zoom.us/webinar/register/WN_G2TVTLTmRi-0ml2jkPpX_g",
+    registerUrl: "https://ifad.zoom.us/webinar/register/WN_lG0cGav3TzOOdYMSFa-lRw",
     linkedinUrl: null
   },
   {
@@ -677,7 +677,7 @@ const EVENTS = [
     title: "Webinar Series II: Carbon Credits in Agriculture – From Frameworks to Field Implementation",
     tag: "Webinar",
     date: "2026-06-15",
-    time: null,
+    time: "11:00",
     duration: 75,
     language: null,
     location: "Online – Zoom",
@@ -727,10 +727,11 @@ function formatDateLong(ev) {
 // ══════════════════════════════════════════════
 //  ICS GENERATION
 // ══════════════════════════════════════════════
-function toICSDate(dateStr, timeStr) {
-  const d = new Date(dateStr + 'T' + (timeStr || '10:00') + ':00');
-  // Convert CEST (UTC+2) to UTC
-  const utc = new Date(d.getTime() - 2 * 60 * 60 * 1000);
+function toICSDate(dateStr, timeStr, addMinutes = 0) {
+  const [year, month, day] = dateStr.split('-').map(Number);
+  const [hour, minute] = (timeStr || '10:00').split(':').map(Number);
+  // Event times are entered in CEST (UTC+2). Convert them to UTC for ICS export.
+  const utc = new Date(Date.UTC(year, month - 1, day, hour - 2, minute + addMinutes, 0));
   return utc.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
 }
 
@@ -746,9 +747,7 @@ function makeICS(events) {
   ];
   events.filter(e => e.date).forEach(e => {
     const start = toICSDate(e.date, e.time);
-    const endD = new Date(e.date + 'T' + (e.time || '10:00') + ':00');
-    endD.setMinutes(endD.getMinutes() + e.duration);
-    const endStr = endD.toISOString().replace(/[-:]/g,'').split('.')[0] + 'Z';
+    const endStr = toICSDate(e.date, e.time, e.duration);
     const uid = `agripdb-${e.id}-${e.date}@agri-pdb.org`;
     lines.push(
       'BEGIN:VEVENT',
