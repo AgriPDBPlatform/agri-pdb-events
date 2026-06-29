@@ -661,51 +661,27 @@
 const EVENTS = [
 
   {
-    id: 11,
-    title: "Gestion des données pour les indicateurs d'impact : des systèmes manuels aux technologies numériques et avancées",
+    id: 1,
+    title: "The Role of PDBs and DFIs in Fostering Locally Led Development Finance for Agricultural Transformation",
     tag: "Webinar",
-    date: "2026-06-12",
+    date: "2026-07-07",
     time: "16:00",
     duration: 60,
-    language: "🇫🇷 Français",
-    location: "Online – Zoom",
-    registerUrl: "https://ifad.zoom.us/webinar/register/WN_lG0cGav3TzOOdYMSFa-lRw",
-    linkedinUrl: null
-  },
-  {
-    id: 6,
-    title: "Webinar Series II: Carbon Credits in Agriculture – From Frameworks to Field Implementation",
-    tag: "Webinar",
-    date: "2026-06-15",
-    time: "11:00",
-    duration: 75,
     language: null,
     location: "Online – Zoom",
-    registerUrl: "https://ifad.zoom.us/webinar/register/WN_1FYue_0ISHKza9t_RhT8bg",
+    registerUrl: "https://ifad.zoom.us/webinar/register/WN_qmWTqCwQTJCQSqlxRymGjA",
     linkedinUrl: null
   },
   {
-    id: 9,
-    title: "Learning Event: Insurance for Public Development Banks",
+    id: 2,
+    title: "Learning Event: Webinar Series II: Carbon Credits in Agriculture – From Frameworks to Field Implementation",
     tag: "Learning Event",
-    date: "2026-06-17",
-    time: "09:00",
+    date: "2026-07-17",
+    time: "11:00",
     duration: 60,
-    language: "🇬🇧 English",
+    language: null,
     location: "Online – Zoom",
-    registerUrl: "https://ifad.zoom.us/webinar/register/WN_uh2HdGg4TZWWPRMtr_ORIg",
-    linkedinUrl: null
-  },
-  {
-    id: 10,
-    title: "Learning Event: Insurance for Public Development Banks",
-    tag: "Learning Event",
-    date: "2026-06-17",
-    time: "15:00",
-    duration: 60,
-    language: "🇪🇸 Español",
-    location: "Online – Zoom",
-    registerUrl: "https://ifad.zoom.us/webinar/register/WN_-k5kMHdyTYKl801-y5nBwA",
+    registerUrl: "https://ifad.zoom.us/webinar/register/WN_Woxsa-bVRhuaufnyIF6pCg",
     linkedinUrl: null
   }
 ];
@@ -859,9 +835,16 @@ function makeCard(ev) {
 let currentYear, currentMonth;
 
 function initGrid() {
-  const today = new Date();
-  currentYear = today.getFullYear();
-  currentMonth = today.getMonth();
+  const firstEvent = EVENTS.filter(e => e.date).sort((a, b) => a.date.localeCompare(b.date))[0];
+  if (firstEvent) {
+    const d = parseDate(firstEvent.date);
+    currentYear = d.getFullYear();
+    currentMonth = d.getMonth();
+  } else {
+    const today = new Date();
+    currentYear = today.getFullYear();
+    currentMonth = today.getMonth();
+  }
   renderGrid();
 }
 
