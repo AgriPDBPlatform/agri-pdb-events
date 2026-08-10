@@ -1800,42 +1800,6 @@ const EVENTS = [
     "archive": false
   },
   {
-    "id": 90,
-    "title": "Agroecology Webinar",
-    "tag": "Webinar",
-    "date": null,
-    "endDate": null,
-    "month": "2026-08",
-    "time": null,
-    "duration": null,
-    "language": null,
-    "location": "Online",
-    "registerUrl": null,
-    "linkedinUrl": null,
-    "theme": "Agroecology",
-    "broadTheme": "Agroecology",
-    "source": "Theme x activity",
-    "archive": false
-  },
-  {
-    "id": 91,
-    "title": "MOOC Agroecology",
-    "tag": "MOOC",
-    "date": null,
-    "endDate": null,
-    "month": "2026-08",
-    "time": null,
-    "duration": null,
-    "language": null,
-    "location": "Online",
-    "registerUrl": null,
-    "linkedinUrl": null,
-    "theme": "Agroecology",
-    "broadTheme": "Agroecology",
-    "source": "Theme x activity",
-    "archive": false
-  },
-  {
     "id": 92,
     "title": "Governance Session II",
     "tag": "Webinar",
@@ -1922,42 +1886,6 @@ const EVENTS = [
     "linkedinUrl": null,
     "theme": "Financial Inclusion",
     "broadTheme": "Financial inclusion",
-    "source": "Theme x activity",
-    "archive": false
-  },
-  {
-    "id": 97,
-    "title": "KPIs Training",
-    "tag": "Training & technical",
-    "date": null,
-    "endDate": null,
-    "month": "2026-09",
-    "time": null,
-    "duration": null,
-    "language": null,
-    "location": "Online",
-    "registerUrl": null,
-    "linkedinUrl": null,
-    "theme": "KPI",
-    "broadTheme": "KPI & impact",
-    "source": "Theme x activity",
-    "archive": false
-  },
-  {
-    "id": 98,
-    "title": "Nutrition Webinar",
-    "tag": "Webinar",
-    "date": null,
-    "endDate": null,
-    "month": "2026-09",
-    "time": null,
-    "duration": null,
-    "language": null,
-    "location": "Online",
-    "registerUrl": null,
-    "linkedinUrl": null,
-    "theme": "Nutrition",
-    "broadTheme": "Nutrition & food systems",
     "source": "Theme x activity",
     "archive": false
   },
@@ -2049,60 +1977,6 @@ const EVENTS = [
     "theme": null,
     "broadTheme": null,
     "source": "Activity overview",
-    "archive": false
-  },
-  {
-    "id": 104,
-    "title": "Agroecology Policy Brief",
-    "tag": "Knowledge product",
-    "date": null,
-    "endDate": null,
-    "month": "2026-10",
-    "time": null,
-    "duration": null,
-    "language": null,
-    "location": null,
-    "registerUrl": null,
-    "linkedinUrl": null,
-    "theme": "Agroecology",
-    "broadTheme": "Agroecology",
-    "source": "Activity overview; Theme x activity",
-    "archive": false
-  },
-  {
-    "id": 105,
-    "title": "Peer-to-Peer exchange on Green Bonds with BAAC Thailand",
-    "tag": "Peer-to-peer",
-    "date": null,
-    "endDate": null,
-    "month": "2026-10",
-    "time": null,
-    "duration": null,
-    "language": null,
-    "location": "Online",
-    "registerUrl": null,
-    "linkedinUrl": null,
-    "theme": "Green Bonds",
-    "broadTheme": "Climate & environment",
-    "source": "Theme x activity",
-    "archive": false
-  },
-  {
-    "id": 106,
-    "title": "Secondment with a PDB in Asia and Pacific Region 2nd Phase",
-    "tag": "Secondment",
-    "date": null,
-    "endDate": null,
-    "month": "2026-10",
-    "time": null,
-    "duration": null,
-    "language": null,
-    "location": null,
-    "registerUrl": null,
-    "linkedinUrl": null,
-    "theme": "Institutional Cooperation",
-    "broadTheme": "Governance & development",
-    "source": "Activity overview; Theme x activity",
     "archive": false
   },
   {
@@ -2276,12 +2150,22 @@ let currentYear = 2026, currentMonth = 7;
 
 function parseDate(d) { return d ? new Date(d + 'T12:00:00') : null; }
 function eventSortKey(ev) { return (ev.date || (ev.month ? ev.month + '-28' : '2999-12-31')) + ' ' + (ev.date ? '0' : '1') + ' ' + (ev.time || '99:99') + ' ' + ev.title; }
+function eventDateKey(ev) { return ev.date || (ev.month ? ev.month + '-28' : '2999-12-31'); }
+function compareEvents(a, b) {
+  const ad = eventDateKey(a), bd = eventDateKey(b);
+  if (ad !== bd) return state.tab === 'archive' ? bd.localeCompare(ad) : ad.localeCompare(bd);
+  const at = a.time || (state.tab === 'archive' ? '00:00' : '99:99');
+  const bt = b.time || (state.tab === 'archive' ? '00:00' : '99:99');
+  if (at !== bt) return state.tab === 'archive' ? bt.localeCompare(at) : at.localeCompare(bt);
+  return (a.title || '').localeCompare(b.title || '');
+}
+function compareMonths(a, b) { const cmp = a.localeCompare(b); return state.tab === 'archive' ? -cmp : cmp; }
 function monthKey(ev) { return ev.month || (ev.date ? ev.date.slice(0,7) : 'tbd'); }
 function normalizeText(value) { return String(value || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 function eventYear(ev) { const key = ev.date || ev.month || ev.endDate; return key ? key.slice(0,4) : 'TBC'; }
 function eventThemes(ev) { return [ev.theme, ev.broadTheme].filter(Boolean); }
 function eventSearchText(ev) { return [ev.title, ev.tag, ev.language, ev.location, ev.theme, ev.broadTheme, ev.source, ev.date, ev.month].filter(Boolean).join(' '); }
-function getBaseDataset() { return EVENTS.filter(e => state.tab === 'archive' ? e.archive : !e.archive).sort((a,b)=>eventSortKey(a).localeCompare(eventSortKey(b))); }
+function getBaseDataset() { return EVENTS.filter(e => state.tab === 'archive' ? e.archive : !e.archive).sort(compareEvents); }
 function matchesFilters(ev) {
   const f = state.filters;
   if (f.type && (ev.tag || 'Event') !== f.type) return false;
@@ -2291,7 +2175,7 @@ function matchesFilters(ev) {
   if (f.query && !normalizeText(eventSearchText(ev)).includes(normalizeText(f.query))) return false;
   return true;
 }
-function getDataset() { return getBaseDataset().filter(matchesFilters).sort((a,b)=>eventSortKey(a).localeCompare(eventSortKey(b))); }
+function getDataset() { return getBaseDataset().filter(matchesFilters).sort(compareEvents); }
 function tagClass(tag) {
   const t = (tag || '').toLowerCase();
   if (t.includes('peer')) return 'peer';
@@ -2316,7 +2200,7 @@ function populateFilters() {
   setSelectOptions('filter-type', 'All types', uniqueSorted(data.map(e => e.tag || 'Event')), 'type');
   setSelectOptions('filter-theme', 'All themes', uniqueSorted(data.flatMap(e => eventThemes(e))), 'theme');
   setSelectOptions('filter-language', 'All languages', uniqueSorted(data.map(e => e.language)), 'language');
-  setSelectOptions('filter-year', 'All years', uniqueSorted(data.map(e => eventYear(e))).sort((a,b)=>a.localeCompare(b)), 'year');
+  setSelectOptions('filter-year', 'All years', uniqueSorted(data.map(e => eventYear(e))).sort((a,b)=>state.tab === 'archive' ? b.localeCompare(a) : a.localeCompare(b)), 'year');
   const search = document.getElementById('search-input');
   if (search) search.value = state.filters.query;
 }
@@ -2344,7 +2228,8 @@ function formatDateLong(ev) {
       const e = parseDate(ev.endDate);
       base = `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()} – ${e.getDate()} ${MONTHS[e.getMonth()]} ${e.getFullYear()}`;
     }
-    return base + (ev.time ? ` · ${ev.time} CEST` : ' · Time TBC');
+    if (ev.time) return base + ` · ${ev.time} CEST`;
+    return ev.archive ? base : base + ' · Time TBC';
   }
   if (ev.month) { const [y,m] = ev.month.split('-').map(Number); return `${MONTHS[m-1]} ${y} · Date TBC`; }
   return 'Date to be confirmed';
@@ -2387,11 +2272,11 @@ function renderList() {
   if (!data.length) { container.innerHTML = '<div class="empty">No events to show.</div>'; return; }
   const byMonth = {};
   data.forEach(ev => { const k = monthKey(ev); if (!byMonth[k]) byMonth[k] = []; byMonth[k].push(ev); });
-  Object.keys(byMonth).sort().forEach(key => {
+  Object.keys(byMonth).sort(compareMonths).forEach(key => {
     const sec = document.createElement('div'); sec.className = 'month-section';
     const label = key !== 'tbd' ? `${MONTHS[Number(key.slice(5))-1]} ${key.slice(0,4)}` : 'Date to be confirmed';
     sec.innerHTML = `<div class="month-label">${label}</div>`;
-    byMonth[key].sort((a,b)=>eventSortKey(a).localeCompare(eventSortKey(b))).forEach(ev => sec.appendChild(makeCard(ev)));
+    byMonth[key].sort(compareEvents).forEach(ev => sec.appendChild(makeCard(ev)));
     container.appendChild(sec);
   });
 }
@@ -2404,7 +2289,7 @@ function setNoticeAndCount() {
   const filteredText = data.length === base.length ? `<strong>${data.length}</strong> ${label} events` : `<strong>${data.length}</strong> of ${base.length} ${label} events`;
   document.getElementById('event-count').innerHTML = `${filteredText} · ${dated} dated · ${tbc} TBC`;
   document.getElementById('notice').textContent = state.tab === 'archive'
-    ? `Archive view shows past activities before 10 August 2026. Use search and filters to narrow by type, theme, language or year.`
+    ? `Archive view shows past activities before 10 August 2026, ordered newest first. Use search and filters to narrow by type, theme, language or year.`
     : `Upcoming view starts from 10 August 2026 and includes dated events plus month-level TBC activities from the archive workbook. Use search and filters to narrow the list.`;
   document.querySelector('.btn-ics-all').style.display = state.tab === 'upcoming' ? 'inline-flex' : 'none';
 }
